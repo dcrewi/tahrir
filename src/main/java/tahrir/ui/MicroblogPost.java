@@ -21,7 +21,7 @@ public class MicroblogPost extends JPanel {
 	public MicroblogPost(final ParsedMicroblog mb, final TrMainWindow mainWindow) {
 		super(new MigLayout());
 		setBackground(Color.WHITE);
-		setBorder(BorderFactory.createRaisedSoftBevelBorder());
+		setBorder(BorderFactory.createRaisedBevelBorder());
 
 		addPostTime(mb, mainWindow);
 		addAuthorButton(mb, mainWindow);
