@@ -239,7 +239,7 @@ public class MicroblogParser {
 	public static class PositionComparator implements Comparator<ParsedPart> {
 		@Override
 		public int compare(ParsedPart o1, ParsedPart o2) {
-			return Integer.compare(o1.getPositionInMicroblog(), o2.getPositionInMicroblog());
+			return Integer.valueOf(o1.getPositionInMicroblog()).compareTo(o2.getPositionInMicroblog());
 		}
 	}
 }
