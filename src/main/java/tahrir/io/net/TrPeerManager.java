@@ -1,10 +1,17 @@
 package tahrir.io.net;
 
-import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
-import org.apache.commons.math3.distribution.BetaDistribution;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.BetaDistributionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import tahrir.TrConstants;
 import tahrir.TrNode;
 import tahrir.io.net.TrPeerManager.TrPeerInfo.Assimilation;
@@ -14,12 +21,8 @@ import tahrir.tools.Persistence;
 import tahrir.tools.Persistence.Modified;
 import tahrir.tools.TrUtils;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Function;
+import com.google.common.collect.MapMaker;
 
 public class TrPeerManager {
 	public static final double RECENTLY_ATTEMPTED_PENALTY = 1.3;
@@ -102,7 +105,7 @@ public class TrPeerManager {
 			final TrPeerInfo pnii = Persistence.loadReadOnly(TrPeerInfo.class, pubPeerFile);
 			return pnii;
 		} else {
-			/**
+			/*
 			 * Here we use a trick to pick peers in proportion to the
 			 * probability that they will be the fastest peer
 			 */
@@ -324,7 +327,12 @@ public class TrPeerManager {
 		}
 
 		public double getBetaRandom() {
-            return new BetaDistribution(1 + sum, 1 + total - sum).sample();
+			try {
+				return new BetaDistributionImpl(1 + sum, 1 + total - sum).sample();
+			} catch (final MathException e) {
+				e.printStackTrace();
+				return -1;
+			}
 		}
 
 		public void sample(final boolean value) {

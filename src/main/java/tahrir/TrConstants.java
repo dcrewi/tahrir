@@ -1,8 +1,8 @@
 package tahrir;
 
-import java.awt.Color;
-
 public class TrConstants {
+	public static final int PERSISTENCE_CACHE_SIZE = 25;
+
 	public static final int MAX_UDP_PACKET_SIZE = 1400; // old value was 1450
 
 	public static final int UDP_CONN_INIT_INTERVAL_SECONDS = 2;
@@ -37,7 +37,9 @@ public class TrConstants {
 
 	public static final int MAX_MICROBLOGS_FOR_VIEWING = 300;
 
-	public static final int FILTER_CACHE_SIZE = 30;
+	public static final int SHORTENED_PUBLIC_KEY_SIZE = 4;
+
+	public static final int ID_MAP_SIZE = 500;
 
 	public static final int CONTACT_PRIORITY_INCREASE = 5;
 
@@ -47,5 +49,19 @@ public class TrConstants {
 
 	public static final String MAIN_WINDOW_ARTWORK_PATH = "artwork/";
 
-	public static final Color SEAGLASS_BLUE = new Color(112, 154, 208);
+	/**
+	 * Records constants to do with the microblog XML format.
+	 *
+	 * Example: <mb>
+	 *     			<txt>This is a microblog with a mention </txt>
+	 *     			<mtn alias="name">public key encoded in base 64</mtn>
+	 * 			</mb>
+	 */
+	public static class FormatInfo {
+		public static int ALIAS_ATTRIBUTE_INDEX = 0;
+		public static String ROOT = "mb";
+		public static String PLAIN_TEXT = "txt";
+		public static String MENTION = "mtn";
+		public static String ALIAS_ATTRIBUTE = "alias";
+	}
 }

@@ -1,18 +1,19 @@
 package tahrir.io.serialization;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.util.*;
-
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import tahrir.io.crypto.TrCrypto;
-import tahrir.io.net.*;
+import tahrir.io.net.RemoteNodeAddress;
 import tahrir.io.net.TrPeerManager.TrPeerInfo;
 import tahrir.io.net.udpV1.UdpNetworkLocation;
 
-import com.google.common.collect.*;
+import java.io.*;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class SerializationTest {
 
@@ -35,18 +36,6 @@ public class SerializationTest {
 		final DataInputStream dis = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
 		final PrimitiveTypes pt2 = TrSerializer.deserializeFrom(PrimitiveTypes.class, dis);
 		Assert.assertEquals(pt, pt2);
-	}
-
-	public static int testNormalJavaSerialization(final Serializable object) throws IOException {
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-		final ObjectOutputStream oos = new ObjectOutputStream(baos);
-
-		oos.writeObject(object);
-
-		oos.flush();
-
-		return baos.toByteArray().length;
 	}
 
 	@Test
@@ -106,6 +95,33 @@ public class SerializationTest {
 		final DataInputStream dis = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
 		final CollectionsTypes ct2 = TrSerializer.deserializeFrom(CollectionsTypes.class, dis);
 		Assert.assertEquals(ct, ct2);
+	}
+
+	@Test
+	public void duplicateObjectTest() throws Exception {
+		final ArrayList<String> listWithDuplicate = new ArrayList<String>();
+
+		final String string1 = "a";
+		final String string2 = "b";
+		final String string3 = "c";
+
+		listWithDuplicate.add(string1);
+		listWithDuplicate.add(string1);
+
+		final ArrayList<String> listNoDuplicate = new ArrayList<String>();
+
+		listNoDuplicate.add(string3);
+		listNoDuplicate.add(string2);
+
+		final ByteArrayOutputStream baos1 = new ByteArrayOutputStream(1024);
+		final DataOutputStream dos1 = new DataOutputStream(baos1);
+		TrSerializer.serializeTo(listWithDuplicate, dos1);
+
+		final ByteArrayOutputStream baos2 = new ByteArrayOutputStream(1024);
+		final DataOutputStream dos2 = new DataOutputStream(baos2);
+		TrSerializer.serializeTo(listNoDuplicate, dos2);
+
+		Assert.assertEquals(baos2.size(), baos1.size());
 	}
 
 	@SuppressWarnings("serial")
@@ -176,4 +192,16 @@ public class SerializationTest {
 		}
 
 	}
+
+    private static int testNormalJavaSerialization(final Serializable object) throws IOException {
+   		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+   		final ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+   		oos.writeObject(object);
+
+   		oos.flush();
+
+   		return baos.toByteArray().length;
+   	}
 }

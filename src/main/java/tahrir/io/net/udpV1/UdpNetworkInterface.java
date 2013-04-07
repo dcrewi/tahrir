@@ -1,19 +1,27 @@
 package tahrir.io.net.udpV1;
 
-import java.io.IOException;
-import java.net.*;
-import java.security.interfaces.*;
-import java.util.Map;
-import java.util.concurrent.*;
-
-import org.slf4j.*;
-
-import tahrir.TrConstants;
-import tahrir.io.net.*;
-import tahrir.tools.*;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tahrir.TrConstants;
+import tahrir.io.net.PhysicalNetworkLocation;
+import tahrir.io.net.TrNetworkInterface;
+import tahrir.io.net.TrRemoteConnection;
+import tahrir.tools.ByteArraySegment;
+import tahrir.tools.TrUtils;
+import tahrir.tools.Tuple2;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Map;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Ian Clarke <ian.clarke@gmail.com>
@@ -61,10 +69,10 @@ public class UdpNetworkInterface extends TrNetworkInterface {
 	 */
 	@Override
 	public TrRemoteConnection connect(final PhysicalNetworkLocation remoteAddress,
-			final RSAPublicKey remotePubKey,
-			final tahrir.io.net.TrNetworkInterface.TrMessageListener listener,
-			final Function<TrRemoteConnection, Void> connectedCallback,
-			final Runnable disconnectedCallback, final boolean unilateral) {
+									  final RSAPublicKey remotePubKey,
+									  final tahrir.io.net.TrNetworkInterface.TrMessageListener listener,
+									  final Function<TrRemoteConnection, Void> connectedCallback,
+									  final Runnable disconnectedCallback, final boolean unilateral) {
 		// Should they need to pass in all the additional info if we already
 		// have a connection, since it isn't used?
 		UdpRemoteConnection conn = remoteConnections.get(remoteAddress);
@@ -86,7 +94,7 @@ public class UdpNetworkInterface extends TrNetworkInterface {
 
 	@Override
 	protected void sendTo(final PhysicalNetworkLocation recepient_, final ByteArraySegment encryptedMessage,
-			final tahrir.io.net.TrNetworkInterface.TrSentListener sentListener, final double priority) {
+						  final tahrir.io.net.TrNetworkInterface.TrSentListener sentListener, final double priority) {
 		final UdpNetworkLocation recepient = (UdpNetworkLocation) recepient_;
 		assert encryptedMessage.length <= TrConstants.MAX_UDP_PACKET_SIZE : "Packet length " + encryptedMessage.length
 				+ " greater than " + TrConstants.MAX_UDP_PACKET_SIZE;
@@ -116,6 +124,9 @@ public class UdpNetworkInterface extends TrNetworkInterface {
 		simPercentageLoss = percentage;
 	}
 
+	/**
+	 * Config for unicast transmission.
+	 */
 	public static class UNIConfig {
 		public int listenPort = TrUtils.rand.nextInt(10000)+10000;
 
@@ -130,7 +141,7 @@ public class UdpNetworkInterface extends TrNetworkInterface {
 		private final tahrir.io.net.TrNetworkInterface.TrSentListener sentListener;
 
 		public QueuedPacket(final UdpNetworkLocation addr, final ByteArraySegment encryptedMessage,
-				final tahrir.io.net.TrNetworkInterface.TrSentListener sentListener, final double priority) {
+							final tahrir.io.net.TrNetworkInterface.TrSentListener sentListener, final double priority) {
 			this.addr = addr;
 			data = encryptedMessage;
 			this.sentListener = sentListener;
@@ -196,11 +207,11 @@ public class UdpNetworkInterface extends TrNetworkInterface {
 									return null;
 								}}, new Runnable() {
 
-									@Override
-									public void run() {
-										logger.debug("Ulilateral inbound connection from "+ura+" has disconnected, removing");
-										parent.remoteConnections.remove(ura);
-									}}, false);
+								@Override
+								public void run() {
+									logger.debug("Ulilateral inbound connection from "+ura+" has disconnected, removing");
+									parent.remoteConnections.remove(ura);
+								}}, false);
 							parent.remoteConnections.put(ura, connection);
 							connection.received(parent, ura, ByteArraySegment.from(dp));
 						}

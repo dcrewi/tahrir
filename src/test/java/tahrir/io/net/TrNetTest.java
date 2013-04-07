@@ -1,21 +1,26 @@
 package tahrir.io.net;
 
-import java.net.InetAddress;
-import java.security.interfaces.*;
-import java.util.LinkedList;
-
-import org.slf4j.*;
+import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.*;
-
-import tahrir.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+import tahrir.TrConfig;
+import tahrir.TrNode;
 import tahrir.io.crypto.TrCrypto;
 import tahrir.io.net.sessions.Priority;
-import tahrir.io.net.udpV1.*;
+import tahrir.io.net.udpV1.UdpNetworkInterface;
 import tahrir.io.net.udpV1.UdpNetworkInterface.UNIConfig;
-import tahrir.tools.*;
+import tahrir.io.net.udpV1.UdpNetworkLocation;
+import tahrir.tools.TrUtils.TestUtils;
+import tahrir.tools.Tuple2;
 
-import com.google.common.collect.Lists;
+import java.net.InetAddress;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.LinkedList;
 
 public class TrNetTest {
 	Logger logger = LoggerFactory.getLogger(TrNetTest.class);
@@ -47,18 +52,17 @@ public class TrNetTest {
 		final TrNetworkInterface iface2 = new UdpNetworkInterface(udpNetIfaceConf2, kp2);
 
 		final TrConfig trCfg1 = new TrConfig();
-		trCfg1.peers.assimilate = false;
-		trCfg1.peers.runMaintainance = false;
+		setTrConfig(trCfg1);
 
 		final TrConfig trCfg2 = new TrConfig();
-		trCfg2.peers.assimilate = false;
-		trCfg2.peers.runMaintainance = false;
-		final TrNode node1 = new TrNode(TrUtils.createTempDirectory(), trCfg1);
+		setTrConfig(trCfg2);
+
+		final TrNode node1 = new TrNode(TestUtils.createTempDirectory(), trCfg1);
 		final TrSessionManager sessionMgr1 = new TrSessionManager(node1, iface1, false);
 
 		sessionMgr1.registerSessionClass(TestSession.class, TestSessionImpl.class);
 
-		final TrNode node2 = new TrNode(TrUtils.createTempDirectory(), trCfg2);
+		final TrNode node2 = new TrNode(TestUtils.createTempDirectory(), trCfg2);
 		final TrSessionManager sessionMgr2 = new TrSessionManager(node2, iface2, false);
 
 		sessionMgr2.registerSessionClass(TestSession.class, TestSessionImpl.class);
@@ -136,6 +140,13 @@ public class TrNetTest {
 		}
 
 		Assert.assertTrue(testDone);
+	}
+
+	private void setTrConfig(TrConfig config) {
+		// we are testing basic networking features, not higher level p2p stuff
+		config.peers.assimilate = false;
+		config.peers.runMaintainance = false;
+		config.peers.runBroadcast = false;
 	}
 
 	public static interface TestSession extends TrSession {

@@ -1,21 +1,25 @@
 package tahrir.io.net.udpV1;
 
-import java.net.InetAddress;
-import java.security.interfaces.*;
-
-import org.slf4j.*;
+import com.google.common.base.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.*;
-
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import tahrir.io.crypto.TrCrypto;
-import tahrir.io.net.*;
+import tahrir.io.net.PhysicalNetworkLocation;
+import tahrir.io.net.TrNetworkInterface;
 import tahrir.io.net.TrNetworkInterface.TrMessageListener;
 import tahrir.io.net.TrNetworkInterface.TrSentReceivedListener;
+import tahrir.io.net.TrRemoteConnection;
 import tahrir.io.net.udpV1.UdpNetworkInterface.UNIConfig;
-import tahrir.tools.*;
+import tahrir.tools.ByteArraySegment;
 import tahrir.tools.ByteArraySegment.ByteArraySegmentBuilder;
+import tahrir.tools.Tuple2;
 
-import com.google.common.base.Function;
+import java.net.InetAddress;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 public class UdpNetworkInterfaceTest {
 	private static final Logger logger = LoggerFactory.getLogger(UdpNetworkInterfaceTest.class);
@@ -59,7 +63,7 @@ public class UdpNetworkInterfaceTest {
 		final TrMessageListener noopListener = new TrMessageListener() {
 
 			public void received(final TrNetworkInterface iFace, final PhysicalNetworkLocation sender,
-					final ByteArraySegment message) {
+								 final ByteArraySegment message) {
 			}
 
 		};
@@ -67,7 +71,7 @@ public class UdpNetworkInterfaceTest {
 		listener = new TrMessageListener() {
 
 			public void received(final TrNetworkInterface iFace, final PhysicalNetworkLocation sender,
-					final ByteArraySegment message) {
+								 final ByteArraySegment message) {
 				Assert.assertEquals(message, sentMessage);
 				receivedSuccessfully.called = true;
 			}

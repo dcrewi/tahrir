@@ -5,7 +5,7 @@ import org.testng.annotations.*;
 
 import tahrir.TrNode;
 import tahrir.io.net.TrPeerManager.TrPeerInfo;
-import tahrir.io.net.microblogging.microblogs.Microblog;
+import tahrir.io.net.microblogging.microblogs.BroadcastMicroblog;
 import tahrir.tools.TrUtils;
 
 public class MicroblogBroadcastTest {
@@ -16,9 +16,9 @@ public class MicroblogBroadcastTest {
 
 	@BeforeTest
 	public void setUpNodes() throws Exception {
-		sendingNode = TrUtils.makeTestNode(port++, false, false, false, true, 1, 1);
-		receivingNode = TrUtils.makeTestNode(port++, false, false, false, true, 1 , 1);
-		TrUtils.createTestBidirectionalConnection(sendingNode, receivingNode);
+		sendingNode = TrUtils.TestUtils.makeNode(port++, false, false, false, true, 1, 1);
+		receivingNode = TrUtils.TestUtils.makeNode(port++, false, false, false, true, 1, 1);
+		TrUtils.TestUtils.createBidirectionalConnection(sendingNode, receivingNode);
 		for (final TrPeerInfo pi :sendingNode.peerManager.peers.values()) {
 			pi.capabilities.receivesMessageBroadcasts = true;
 		}
@@ -26,16 +26,16 @@ public class MicroblogBroadcastTest {
 
 	@Test
 	public void simpleTest() throws Exception {
-		final Microblog testMb = new Microblog(sendingNode, "Hello world");
+		final BroadcastMicroblog testMb = new BroadcastMicroblog(sendingNode, "Hello world");
 		sendingNode.mbClasses.mbsForBroadcast.insert(testMb);
 
 		// stop the receiver from broadcasting
-		receivingNode.mbClasses.mbScheduler = null;
+		receivingNode.mbClasses.mbScheduler.disable();
 
 		// don't want initial wait
 		sendingNode.mbClasses.mbScheduler.setupForNextMicroblog();
 		// stop any more broadcasts
-		sendingNode.mbClasses.mbScheduler = null;
+		sendingNode.mbClasses.mbScheduler.disable();
 
 		for (int x=0; x<50; x++) {
 			Thread.sleep(20);
@@ -49,18 +49,18 @@ public class MicroblogBroadcastTest {
 
 	@Test
 	public void priorityTest() throws Exception {
-		final Microblog testMb0 = new Microblog(sendingNode, "You SHOULD have this microblog!", 0);
-		final Microblog testMb1 = new Microblog(sendingNode, "You should NOT have this microblog!", Integer.MAX_VALUE);
+		final BroadcastMicroblog testMb0 = new BroadcastMicroblog(sendingNode, "You SHOULD have this microblog!", 0);
+		final BroadcastMicroblog testMb1 = new BroadcastMicroblog(sendingNode, "You should NOT have this microblog!", Integer.MAX_VALUE);
 		sendingNode.mbClasses.mbsForBroadcast.insert(testMb1);
 		sendingNode.mbClasses.mbsForBroadcast.insert(testMb0);
 
 		// stop the receiver from broadcasting
-		receivingNode.mbClasses.mbScheduler = null;
+		receivingNode.mbClasses.mbScheduler.disable();
 
 		// don't want initial wait
 		sendingNode.mbClasses.mbScheduler.setupForNextMicroblog();
 		// stop any more broadcasts
-		sendingNode.mbClasses.mbScheduler = null;
+		sendingNode.mbClasses.mbScheduler.disable();
 
 		for (int x=0; x<75; x++) {
 			Thread.sleep(50);

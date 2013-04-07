@@ -1,7 +1,7 @@
 package tahrir.io.net.microblogging.filters;
 
-import java.util.*;
-
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.Subscribe;
 import tahrir.io.net.microblogging.containers.MicroblogsForViewing.MicroblogAddedEvent;
 import tahrir.io.net.microblogging.containers.MicroblogsForViewing.MicroblogRemovalEvent;
 import tahrir.io.net.microblogging.containers.MicroblogsForViewing.ParsedMicroblogTimeComparator;
@@ -9,8 +9,10 @@ import tahrir.io.net.microblogging.filters.FilterChangeListener.FilterChangeEven
 import tahrir.io.net.microblogging.microblogs.ParsedMicroblog;
 import tahrir.tools.TrUtils;
 
-import com.google.common.collect.Lists;
-import com.google.common.eventbus.Subscribe;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * An abstract class for filters, which are a subset of the microblogs available for viewing.
@@ -27,10 +29,8 @@ public abstract class MicroblogFilter {
 
 	/**
 	 * Adds all the current microblogs that pass the filter to this Filter.
-	 * 
-	 * A messy way of getting around the fact you can't call an abstract method in a constructor.
-	 * 
-	 * SHOULD BE CALLED IN CONSTRUCTOR OF EVERY SUBCLASS OF MicroblogFilter.
+	 * A messy way of getting around the fact you can't call an abstract method in a constructor. Should be called in
+	 * all in all constructors of implementing classes of {@code MicroblogFilter}.
 	 */
 	public synchronized void initMicroblogStorage(final SortedSet<ParsedMicroblog> initFrom) {
 		microblogs = new TreeSet<ParsedMicroblog>(new ParsedMicroblogTimeComparator());
@@ -46,14 +46,14 @@ public abstract class MicroblogFilter {
 	public synchronized void receiveMicroblog(final MicroblogAddedEvent event) {
 		if (passesFilter(event.mb)) {
 			microblogs.add(event.mb);
+			postToListeners(new FilterChangeEvent(event.mb, false));
 		}
-		postToListeners(new FilterChangeEvent(event.mb, false) );
 	}
 
 	@Subscribe
 	public synchronized void removeMicroblog(final MicroblogRemovalEvent event) {
 		microblogs.remove(event.mb);
-		postToListeners(new FilterChangeEvent(event.mb, true) );
+		postToListeners(new FilterChangeEvent(event.mb, true));
 	}
 
 	public synchronized void registerListener(final FilterChangeListener listener) {
